@@ -10,11 +10,12 @@ import time
 import os
 import signal
 from datetime import datetime
+import random
 
 # ──────────────────────────────────────────────
 # CONFIGURAÇÃO
 # ──────────────────────────────────────────────
-REPETICOES          = 20  # vezes que tex.py → com.py se repete
+REPETICOES          = random.randint(1, 10)  # vezes que tex.py → com.py se repete
 PAUSA_ENTRE_SCRIPTS = 3   # segundos entre tex.py e com.py
 PAUSA_ENTRE_CICLOS  = 10  # segundos entre cada ciclo completo
 MAX_CICLOS          = 0   # 0 = infinito
