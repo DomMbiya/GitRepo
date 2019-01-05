@@ -181,7 +181,7 @@ def main():
             break
 
         aguardar(PAUSA_ENTRE_CICLOS, f"Proximo ciclo (#{ciclo+1}) em")
-
+    
     # Resumo final
     print(f"\n{'='*52}")
     print(f"  RESUMO FINAL")
