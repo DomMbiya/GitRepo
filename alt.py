@@ -1,60 +1,85 @@
+#!/usr/bin/env python3
 import subprocess
 import sys
-import os
 from datetime import datetime
 
-def alterar_data_windows(nova_data):
-    """Altera a data no Windows"""
+def executar_comando(comando):
+    """Executa comando no terminal e retorna saída"""
     try:
-        # Formato: DD-MM-AAAA
-        data_formatada = nova_data.strftime("%d-%m-%Y")
-        subprocess.run(f'date {data_formatada}', shell=True, check=True)
-        print(f"Data alterada para: {data_formatada}")
-        return True
-    except subprocess.CalledProcessError:
-        print("Erro ao alterar data. Execute como administrador.")
-        return False
+        resultado = subprocess.run(comando, shell=True, capture_output=True, text=True)
+        return resultado.stdout.strip(), resultado.stderr.strip(), resultado.returncode
+    except Exception as e:
+        return "", str(e), 1
 
-def alterar_data_linux(nova_data):
-    """Altera a data no Linux/macOS"""
-    try:
-        # Formato: AAAA-MM-DD
-        data_formatada = nova_data.strftime("%Y-%m-%d")
-        subprocess.run(f'sudo date -s "{data_formatada}"', shell=True, check=True)
-        print(f"Data alterada para: {data_formatada}")
+def verificar_git():
+    """Verifica se está em um repositório Git"""
+    stdout, stderr, code = executar_comando("git status")
+    if code != 0:
+        print("❌ Não está em um repositório Git!")
+        return False
+    return True
+
+def verificar_alteracoes():
+    """Verifica se há alterações para commit"""
+    stdout, _, _ = executar_comando("git status --porcelain")
+    if not stdout:
+        print("⚠️  Nenhum arquivo alterado para commit!")
+        return False
+    return True
+
+def commit_auto_push():
+    """Realiza commit automático e push"""
+    print("\n=== COMMIT AUTOMÁTICO COM PUSH ===\n")
+    
+    # Verificar alterações
+    if not verificar_alteracoes():
+        return False
+    
+    # Mostrar arquivos que serão commitados
+    stdout, _, _ = executar_comando("git status --short")
+    print("📁 Arquivos a serem commitados:")
+    print(stdout)
+    
+    # Gerar mensagem automática com data/hora
+    agora = datetime.now()
+    mensagem = f"Update automático - {agora.strftime('%d/%m/%Y %H:%M:%S')}"
+    
+    print(f"\n📝 Mensagem gerada: {mensagem}")
+    
+    # Adicionar arquivos
+    print("\n📦 Adicionando arquivos...")
+    executar_comando("git add .")
+    
+    # Fazer commit
+    print("💾 Realizando commit...")
+    _, stderr, code = executar_comando(f'git commit -m "{mensagem}"')
+    
+    if code != 0:
+        print(f"❌ Erro ao fazer commit: {stderr}")
+        return False
+    
+    print("✅ Commit realizado com sucesso!")
+    
+    # Fazer push
+    print("\n📤 Enviando para o repositório remoto...")
+    _, stderr, code = executar_comando("git push")
+    
+    if code == 0:
+        print("✅ Push realizado com sucesso!")
         return True
-    except subprocess.CalledProcessError:
-        print("Erro ao alterar data. Execute como sudo.")
+    else:
+        print(f"❌ Erro no push: {stderr}")
         return False
 
 def main():
-    print("=== ALTERADOR DE DATA DO SISTEMA ===")
-    print("Formato: DD/MM/AAAA ou DD-MM-AAAA")
-    
-    data_input = input("Digite a nova data: ")
-    
-    # Tentar diferentes formatos
-    for formato in ["%d/%m/%Y", "%d-%m-%Y"]:
-        try:
-            nova_data = datetime.strptime(data_input, formato)
-            break
-        except ValueError:
-            continue
-    else:
-        print("Formato inválido! Use DD/MM/AAAA ou DD-MM-AAAA")
+    if not verificar_git():
         sys.exit(1)
     
-    # Detectar sistema operacional
-    sistema = sys.platform
-    
-    if sistema == "win32":
-        if not alterar_data_windows(nova_data):
-            print("Dica: Execute o script como administrador!")
-    elif sistema in ["linux", "darwin"]:  # darwin = macOS
-        if not alterar_data_linux(nova_data):
-            print("Dica: Execute com: sudo python script.py")
+    if commit_auto_push():
+        print("\n🎉 Processo concluído com sucesso!")
     else:
-        print(f"Sistema não suportado: {sistema}")
+        print("\n❌ Falha no processo!")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
