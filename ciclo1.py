@@ -9,14 +9,13 @@ import sys
 import time
 import os
 import signal
-import random
 from datetime import datetime
+import random
 
 # ──────────────────────────────────────────────
 # CONFIGURAÇÃO
 # ──────────────────────────────────────────────
-REP_MIN             = 10  # mínimo de repetições por ciclo
-REP_MAX             = 30  # máximo de repetições por ciclo
+REPETICOES          = random.randint(1, 10)  # vezes que tex.py → com.py se repete
 PAUSA_ENTRE_SCRIPTS = 3   # segundos entre tex.py e com.py
 PAUSA_ENTRE_CICLOS  = 10  # segundos entre cada ciclo completo
 MAX_CICLOS          = 0   # 0 = infinito
@@ -51,7 +50,7 @@ def cabecalho():
     print("  🔄  CICLO AUTOMÁTICO DE SCRIPTS")
     print(linha("═"))
     print(f"  Ordem por ciclo:")
-    print(f"    (tex.py -> com.py) x[{REP_MIN}~{REP_MAX} aleatorio]")
+    print(f"    (tex.py -> com.py) x{REPETICOES}")
     print(f"    dat.py x1")
     print(f"  Pausa entre scripts : {PAUSA_ENTRE_SCRIPTS}s")
     print(f"  Pausa entre ciclos  : {PAUSA_ENTRE_CICLOS}s")
@@ -132,22 +131,19 @@ def main():
 
         print(f"\n{'='*52}")
         print(f"  CICLO #{ciclo}   [{hora()}]")
-
-        repeticoes = random.randint(REP_MIN, REP_MAX)
-        print(f"  Repeticoes sorteadas: {repeticoes}")
         print(f"{'='*52}")
 
         resultados = []
 
         # ── Fase 1: (tex.py → com.py) repetido REPETICOES vezes ──
-        for r in range(1, repeticoes + 1):
+        for r in range(1, REPETICOES + 1):
             if not executando:
                 break
 
-            print(f"\n  --- Repeticao {r}/{repeticoes} ---")
+            print(f"\n  --- Repeticao {r}/{REPETICOES} ---")
 
             # tex.py
-            ok = executar_script(TEX, f"  [rep {r}/{repeticoes}]")
+            ok = executar_script(TEX, f"  [rep {r}/{REPETICOES}]")
             resultados.append(ok)
             total_ok   += 1 if ok else 0
             total_fail += 0 if ok else 1
@@ -158,13 +154,13 @@ def main():
             aguardar(PAUSA_ENTRE_SCRIPTS, "Proximo em")
 
             # com.py
-            ok = executar_script(COM, f"  [rep {r}/{repeticoes}]")
+            ok = executar_script(COM, f"  [rep {r}/{REPETICOES}]")
             resultados.append(ok)
             total_ok   += 1 if ok else 0
             total_fail += 0 if ok else 1
 
-            if r < repeticoes and executando:
-                aguardar(PAUSA_ENTRE_SCRIPTS, "Proxima repeticao em")
+            if r < REPETICOES and executando:
+                aguardar(PAUSA_ENTRE_SCRIPTS, "Proxima repeticao em")        
 
         # ── Fase 2: dat.py 1x ──
         if executando:
@@ -181,10 +177,10 @@ def main():
         print(f"  Ciclo #{ciclo} finalizado -- OK: {ok_c}  |  Falhas: {fail_c}")
         print(f"  {linha('-', 48)}")
 
-        if not executando:
+        if not executando:                        
             break
 
-        aguardar(PAUSA_ENTRE_CICLOS, f"Proximo ciclo (#{ciclo+1}) em")
+        aguardar(PAUSA_ENTRE_CICLOS, f"Proximo ciclo (#{ciclo+1}) em")    
 
     # Resumo final
     print(f"\n{'='*52}")
@@ -194,6 +190,6 @@ def main():
     print(f"  Execucoes OK      : {total_ok}")
     print(f"  Execucoes Falha   : {total_fail}")
     print(f"{'='*52}\n")
-
+    
 if __name__ == "__main__":
     main()
